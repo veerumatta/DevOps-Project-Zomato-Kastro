@@ -14,6 +14,7 @@ env:
 
 jobs:
 
+
 ################################################
 # 1. BUILD REACT APPLICATION
 ################################################
@@ -27,12 +28,14 @@ jobs:
 
     steps:
 
+
     - name: Checkout Code
       uses: actions/checkout@v4
 
 
     - name: Setup Node.js
       uses: actions/setup-node@v4
+
       with:
         node-version: 20
 
@@ -46,47 +49,64 @@ jobs:
 
 
 
+
 ################################################
 # 2. SONARQUBE SCAN
 ################################################
 
   sonarqube:
 
+
     name: SonarQube Analysis
 
+
     runs-on: ubuntu-latest
+
 
     needs: build
 
 
+
     steps:
 
+
+
     - name: Checkout Code
+
       uses: actions/checkout@v4
+
 
 
     - name: Install Sonar Scanner
 
       run: |
 
+
         sudo apt update
 
+
         sudo apt install unzip wget -y
+
 
 
         wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
 
 
+
         unzip sonar-scanner-cli-5.0.1.3006-linux.zip
+
 
 
         echo "$PWD/sonar-scanner-5.0.1.3006-linux/bin" >> $GITHUB_PATH
 
 
 
+
     - name: SonarQube Scan
 
+
       run: |
+
 
         sonar-scanner \
         -Dsonar.projectKey=zomato-kastro \
@@ -94,6 +114,9 @@ jobs:
         -Dsonar.sources=src \
         -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
         -Dsonar.token=${{ secrets.SONAR_TOKEN }}
+
+
+
 
 
 
@@ -118,39 +141,54 @@ jobs:
     steps:
 
 
+
     - name: Checkout Code
 
       uses: actions/checkout@v4
 
 
 
+
     - name: Install Trivy
+
 
       run: |
 
+
         sudo apt update
 
+
         sudo apt install wget -y
+
 
 
         wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
 
 
+
         echo "deb https://aquasecurity.github.io/trivy-repo/deb generic main" | sudo tee /etc/apt/sources.list.d/trivy.list
 
 
+
         sudo apt update
+
 
 
         sudo apt install trivy -y
 
 
 
-    - name: Trivy File Scan
+
+
+    - name: Trivy File System Scan
+
 
       run: |
 
+
         trivy fs . --severity HIGH,CRITICAL --exit-code 0
+
+
 
 
 
@@ -163,22 +201,29 @@ jobs:
   docker:
 
 
+
     name: Docker Build Push
 
 
+
     runs-on: ubuntu-latest
+
 
 
     needs: trivy-fs
 
 
 
+
     steps:
+
+
 
 
     - name: Checkout Code
 
       uses: actions/checkout@v4
+
 
 
 
@@ -200,7 +245,10 @@ jobs:
 
 
 
+
+
     - name: Docker Build
+
 
 
       run: |
@@ -208,6 +256,7 @@ jobs:
 
         docker build \
         -t ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:latest .
+
 
 
 
@@ -222,13 +271,15 @@ jobs:
       with:
 
 
-        image-ref: '${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:latest'
+        image-ref: ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:latest
 
 
-        severity: 'HIGH,CRITICAL'
+        severity: HIGH,CRITICAL
 
 
-        exit-code: '0'
+        exit-code: 0
+
+
 
 
 
@@ -246,6 +297,7 @@ jobs:
 
 
 
+
 ################################################
 # 5. GMAIL NOTIFICATION
 ################################################
@@ -254,26 +306,34 @@ jobs:
   email:
 
 
+
     name: Gmail Notification
+
 
 
     runs-on: ubuntu-latest
 
 
+
     needs: docker
+
 
 
     if: always()
 
 
 
+
     steps:
+
+
 
 
     - name: Send Email
 
 
       uses: dawidd6/action-send-mail@v3
+
 
 
 
@@ -307,10 +367,15 @@ jobs:
 
         body: |
 
+
           DevSecOps Pipeline Completed
 
+
           Repository:
+
           ${{ github.repository }}
 
+
           Status:
+
           ${{ job.status }}

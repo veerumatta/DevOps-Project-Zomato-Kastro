@@ -61,23 +61,27 @@ jobs:
 
     steps:
 
-
     - name: Checkout Code
       uses: actions/checkout@v4
 
 
-
-    - name: Create SonarQube Properties
+    - name: Create SonarQube Properties File
 
       run: |
 
-        echo "sonar.projectKey=zomato-kastro" > sonar-project.properties
+        cat > sonar-project.properties <<EOF
+        sonar.projectKey=zomato-kastro
+        sonar.projectName=zomato-kastro
+        sonar.sources=src
+        sonar.sourceEncoding=UTF-8
+        EOF
 
-        echo "sonar.projectName=zomato-kastro" >> sonar-project.properties
 
-        echo "sonar.sources=src" >> sonar-project.properties
+    - name: Check Sonar Properties
 
-        echo "sonar.sourceEncoding=UTF-8" >> sonar-project.properties
+      run: |
+
+        cat sonar-project.properties
 
 
 
@@ -85,14 +89,16 @@ jobs:
 
       uses: SonarSource/sonarqube-scan-action@v5
 
+      with:
+
+        projectBaseDir: .
+
+
       env:
 
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
         SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-
-
-
 
 ################################################
 # 3. TRIVY FILE SYSTEM SCAN

@@ -65,40 +65,37 @@ jobs:
       uses: actions/checkout@v4
 
 
-    - name: Create SonarQube Properties File
+    - name: Install Sonar Scanner
 
       run: |
 
-        cat > sonar-project.properties <<EOF
-        sonar.projectKey=zomato-kastro
-        sonar.projectName=zomato-kastro
-        sonar.sources=src
-        sonar.sourceEncoding=UTF-8
-        EOF
+        sudo apt update
+
+        sudo apt install unzip wget -y
 
 
-    - name: Check Sonar Properties
+        wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
 
-      run: |
 
-        cat sonar-project.properties
+        unzip sonar-scanner-cli-5.0.1.3006-linux.zip
+
+
+        echo "$PWD/sonar-scanner-5.0.1.3006-linux/bin" >> $GITHUB_PATH
 
 
 
     - name: SonarQube Scan
 
-      uses: SonarSource/sonarqube-scan-action@v5
+      run: |
 
-      with:
+        sonar-scanner \
+        -Dsonar.projectKey=zomato-kastro \
+        -Dsonar.projectName=zomato-kastro \
+        -Dsonar.sources=src \
+        -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
+        -Dsonar.token=${{ secrets.SONAR_TOKEN }}
 
-        projectBaseDir: .
 
-
-      env:
-
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
-        SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
 ################################################
 # 3. TRIVY FILE SYSTEM SCAN

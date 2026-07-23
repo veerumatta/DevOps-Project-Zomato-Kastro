@@ -47,7 +47,7 @@ jobs:
 
 
 ################################################
-# 2. SONARQUBE SCAN + QUALITY ANALYSIS
+# 2. SONARQUBE SCAN
 ################################################
 
   sonarqube:
@@ -61,20 +61,29 @@ jobs:
 
     steps:
 
+
     - name: Checkout Code
       uses: actions/checkout@v4
 
 
+
+    - name: Create SonarQube Properties
+
+      run: |
+
+        echo "sonar.projectKey=zomato-kastro" > sonar-project.properties
+
+        echo "sonar.projectName=zomato-kastro" >> sonar-project.properties
+
+        echo "sonar.sources=src" >> sonar-project.properties
+
+        echo "sonar.sourceEncoding=UTF-8" >> sonar-project.properties
+
+
+
     - name: SonarQube Scan
+
       uses: SonarSource/sonarqube-scan-action@v5
-
-      with:
-
-        args: >
-          -Dsonar.projectKey=zomato-kastro
-          -Dsonar.projectName=zomato-kastro
-          -Dsonar.sources=src
-
 
       env:
 
@@ -84,23 +93,30 @@ jobs:
 
 
 
+
 ################################################
 # 3. TRIVY FILE SYSTEM SCAN
 ################################################
 
+
   trivy-fs:
+
 
     name: Trivy File System Scan
 
+
     runs-on: ubuntu-latest
 
+
     needs: sonarqube
+
 
 
     steps:
 
 
     - name: Checkout Code
+
       uses: actions/checkout@v4
 
 
@@ -140,6 +156,7 @@ jobs:
 # 4. DOCKER BUILD AND PUSH
 ################################################
 
+
   docker:
 
 
@@ -159,6 +176,7 @@ jobs:
     - name: Checkout Code
 
       uses: actions/checkout@v4
+
 
 
 
@@ -187,6 +205,7 @@ jobs:
 
         docker build \
         -t ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:latest .
+
 
 
 
@@ -223,9 +242,11 @@ jobs:
 
 
 
+
 ################################################
-# 5. EMAIL NOTIFICATION
+# 5. GMAIL NOTIFICATION
 ################################################
+
 
   email:
 
@@ -250,6 +271,7 @@ jobs:
 
 
       uses: dawidd6/action-send-mail@v3
+
 
 
       with:
@@ -282,15 +304,10 @@ jobs:
 
         body: |
 
-
           DevSecOps Pipeline Completed
 
-
           Repository:
-
           ${{ github.repository }}
 
-
           Status:
-
           ${{ job.status }}
